@@ -1,0 +1,15 @@
+import {ChainId} from '@bgd-labs/js-utils';
+import {PoolConfig} from '../types';
+
+export const magmaProtoV3: PoolConfig = {
+  name: 'Magma',
+  chainId: ChainId.magma,
+  POOL_ADDRESSES_PROVIDER: '0x489eEDa8d602D61393210a3F07738eE363a2E7d7',
+  additionalAddresses: {
+    FAUCET: '0x2a5F1543641D12B8d76BfA94865867922B6B7b8E',
+    UI_INCENTIVE_DATA_PROVIDER: '0x4E1253a968451d0ca59e609a5291Bf9253BE7Ec7',
+    UI_POOL_DATA_PROVIDER: '0x1D3cefD149661cC44caf83e5AdC7B969f8aa3Bb0',
+    WALLET_BALANCE_PROVIDER: '0x0700B6eAAE353A0feB31459593CDB950cA81f7DC',
+    WETH_GATEWAY: '0x025E58794e5BC24ee4E1c8178eeD6CAcB7b5b9B7',
+  },
+};

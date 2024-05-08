@@ -1,0 +1,89 @@
+name: Update library
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+  push:
+    paths-ignore:
+      - "src/**"
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  check-proposals:
+    name: Check if library is up to date
+    runs-on: ubuntu-latest
+    env:
+      FOUNDRY_PROFILE: ci
+    permissions:
+      pull-requests: write
+      contents: write
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Generate library
+        run: yarn generate:addresses
+        env:
+          RPC_MAINNET: ${{ secrets.RPC_MAINNET }}
+          RPC_POLYGON: ${{ secrets.RPC_POLYGON }}
+          RPC_AVALANCHE: ${{ secrets.RPC_AVALANCHE }}
+          RPC_OPTIMISM: ${{ secrets.RPC_OPTIMISM }}
+          RPC_ARBITRUM: ${{ secrets.RPC_ARBITRUM }}
+          RPC_BASE: ${{ secrets.RPC_BASE }}
+          RPC_GNOSIS: ${{ secrets.RPC_GNOSIS }}
+          RPC_BNB: ${{ secrets.RPC_BNB }}
+          RPC_METIS: ${{ secrets.RPC_METIS }}
+          RPC_SCROLL: ${{ secrets.RPC_SCROLL }}
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@712add83f26c1e359c046a6ca3dd677fb7017626
+        with:
+          committer: Cache-bot <noreply@github.com>
+          commit-message: "chore(cache): automated cache update"
+          delete-branch: true
+          title: "chore(cache): automated cache update"
+
+      - name: Post to a Slack channel
+        id: slack
+        if: failure()
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          # Slack channel id, channel name, or user id to post message.
+          # See also: https://api.slack.com/methods/chat.postMessage#channels
+          channel-id: "C03FJHE0B4Y"
+          # For posting a rich message using Block Kit
+          payload: |
+            {
+              "text": "GitHub Action build result: ${{ job.status }}\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+              "blocks": [
+                  {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "GitHub Action build result: ${{ job.status }}\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                  }
+                }]
+            }
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
